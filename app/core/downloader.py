@@ -25,5 +25,12 @@ async def download_youtube_podcast(yt_url, file_id):
     return wav_file
 
   except Exception:
+    audio = yt_url.streams.filter(only_audio=True).first()
+    curr_dir = os.path.dirname(os.path.abspath(__file__)) 
+    file_path = os.path.normpath(os.path.join(curr_dir, "../", "../", "audio"))
+    downloaded_file = audio.download(output_path=file_path, filename=file_id)
+    wav_file = convert.convert_mp4_to_wav_pydub(downloaded_file)
+    os.remove(downloaded_file)
+    return wav_file
     print(traceback.format_exc())
-    return None
+    # return None

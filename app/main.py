@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 from fastapi import Request, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from rq import Retry
-from app.queue import download_queue
+from app.queue import download_queue, mailer_queue
 from app.core import downloader, mailer, transcribe
 from app.workers.download import start_download_work
+from app.workers.mailer import start_mailer_work
 from app.db import db_client
 from pydantic import BaseModel
 
@@ -90,10 +91,17 @@ async def summarizeAndSendMail(request: SummaryRequest):
         "file_id": file_id,
         "email": email
     }
+
+    mail_task_dict = {
+        "uid": uid,
+        "file_id": "sum",
+        "email": email
+    }
         
     print("Sending to queue =  {}".format(download_task_dict))
     # send data to download queue
-    download_queue.enqueue(start_download_work, download_task_dict)
+    # download_queue.enqueue(start_download_work, download_task_dict)
+    mailer_queue.enqueue(start_mailer_work,mail_task_dict)
     return download_task_dict
 
 @app.post("/transcribe")
